@@ -120,52 +120,52 @@ CREATE TABLE citas (
         (estado, fecha_hora)
 );
 
-
-CREATE TABLE citas (
+CREATE TABLE pagos (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    paciente_id BIGINT UNSIGNED NOT NULL,
-    doctor_id BIGINT UNSIGNED NOT NULL,
+    cita_id BIGINT UNSIGNED NOT NULL,
 
-    fecha_hora DATETIME NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
 
-    estado ENUM(
-        'pendiente_pago',
-        'confirmada',
-        'atendida',
-        'no_asistio',
-        'cancelada'
-    ) NOT NULL DEFAULT 'pendiente_pago',
+    metodo_pago ENUM(
+        'tarjeta',
+        'transferencia',
+        'efectivo',
+        'otro'
+    ) NOT NULL,
 
-    motivo VARCHAR(500),
+    estado_pago ENUM(
+        'pendiente',
+        'aprobado',
+        'rechazado',
+        'reembolsado'
+    ) NOT NULL DEFAULT 'pendiente',
+
+    referencia_externa VARCHAR(255),
+
+    fecha_pago TIMESTAMP NULL DEFAULT NULL,
 
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    fecha_actualizacion TIMESTAMP NOT NULL
-        DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uq_pago_cita
+        UNIQUE (cita_id),
 
-    CONSTRAINT fk_cita_paciente
-        FOREIGN KEY (paciente_id)
-        REFERENCES pacientes(id)
+    CONSTRAINT uq_pago_referencia
+        UNIQUE (referencia_externa),
+
+    CONSTRAINT fk_pago_cita
+        FOREIGN KEY (cita_id)
+        REFERENCES citas(id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
 
-    CONSTRAINT fk_cita_doctor
-        FOREIGN KEY (doctor_id)
-        REFERENCES doctores(id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+    CONSTRAINT chk_monto_positivo
+        CHECK (monto >= 0),
 
-    INDEX idx_citas_doctor_fecha
-        (doctor_id, fecha_hora),
-
-    INDEX idx_citas_paciente_fecha
-        (paciente_id, fecha_hora),
-
-    INDEX idx_citas_estado_fecha
-        (estado, fecha_hora)
+    INDEX idx_pagos_estado
+        (estado_pago)
 );
+
 
 "enum es un tipo de dato que permite definir un conjunto de valores posibles para una columna.
 En este caso, la columna estado de la tabla citas solo puede tener uno de los siguientes valores:
